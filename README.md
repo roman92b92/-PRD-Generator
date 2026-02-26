@@ -1,6 +1,6 @@
 # PRD Generator
 
-A portfolio project — AI-powered Product Requirements Document generator built on the **Anthropic Claude API**.
+AI-powered Product Requirements Document generator built on the **Anthropic Claude API**.
 
 Describe your product idea, pick a template, and get a complete, production-quality PRD streamed to your browser in real time.
 
