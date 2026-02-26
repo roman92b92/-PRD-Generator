@@ -4,7 +4,11 @@ A portfolio project — AI-powered Product Requirements Document generator built
 
 Describe your product idea, pick a template, and get a complete, production-quality PRD streamed to your browser in real time.
 
-![PRD Generator Screenshot](https://via.placeholder.com/900x500?text=PRD+Generator+UI)
+
+
+https://github.com/user-attachments/assets/bc0e1561-59dd-40e2-823a-2ff136306aa2
+
+
 
 ---
 
