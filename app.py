@@ -81,11 +81,12 @@ def generate():
 
     format_type = data.get("format_type", "standard")
     model = data.get("model") or _get_model()
+    images = data.get("images") or []  # [{data: base64, media_type: mime}, ...]
 
     def sse_stream():
         try:
             generator = PRDGenerator(api_key=api_key, model=model)
-            for chunk in generator.generate_stream(data, format_type):
+            for chunk in generator.generate_stream(data, format_type, images=images):
                 payload = json.dumps({"text": chunk})
                 yield f"data: {payload}\n\n"
         except Exception as exc:  # noqa: BLE001
@@ -121,10 +122,10 @@ if __name__ == "__main__":
     api_key = _get_api_key()
     if not api_key:
         print(
-            "\n⚠  Warning: No Anthropic API key found.\n"
-            "   Copy config.example.json → config.json and add your key,\n"
+            "\n[!] Warning: No Anthropic API key found.\n"
+            "   Copy config.example.json -> config.json and add your key,\n"
             "   or set the ANTHROPIC_API_KEY environment variable.\n"
         )
 
-    print(f"\n🚀  PRD Generator running at http://localhost:{port}\n")
+    print(f"\n>>  PRD Generator running at http://localhost:{port}\n")
     app.run(host="0.0.0.0", port=port, debug=debug)

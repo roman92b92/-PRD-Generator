@@ -376,27 +376,87 @@ Generate the complete PRD now. Replace every placeholder with specific, realisti
 actionable content derived from the product inputs above."""
 
     # ------------------------------------------------------------------
+    # Internal: build message content (text + optional images)
+    # ------------------------------------------------------------------
+
+    def _build_content(self, inputs: dict, format_type: str, images: list) -> list | str:
+        """
+        Build the user message content.
+
+        With no images: returns a plain string (backward compatible).
+        With images: returns a content block list:
+          [text intro, image_1, …, image_N, text prompt]
+        """
+        prompt = self._build_prompt(inputs, format_type)
+
+        if not images:
+            return prompt
+
+        n = len(images)
+        intro = (
+            f"I'm providing {n} visual reference{'s' if n > 1 else ''} "
+            f"(mockup{'s' if n > 1 else ''} / wireframe{'s' if n > 1 else ''}) "
+            f"to inform this PRD.\n\n"
+            f"Please:\n"
+            f"1. Carefully analyze each visual and identify key screens, user flows, "
+            f"and UI patterns shown.\n"
+            f"2. Reference specific observations from the visuals in the relevant PRD "
+            f"sections (e.g. Design & UX, User Stories, Functional Requirements).\n"
+            f"3. Use the visuals to make the acceptance criteria and functional "
+            f"requirements more precise and implementation-ready.\n\n"
+        )
+
+        content: list = [{"type": "text", "text": intro}]
+
+        for img in images:
+            content.append({
+                "type": "image",
+                "source": {
+                    "type": "base64",
+                    "media_type": img.get("media_type", "image/png"),
+                    "data": img["data"],
+                },
+            })
+
+        content.append({"type": "text", "text": prompt})
+        return content
+
+    # ------------------------------------------------------------------
     # Public API
     # ------------------------------------------------------------------
 
     def generate_stream(
-        self, inputs: dict, format_type: str = "standard"
+        self,
+        inputs: dict,
+        format_type: str = "standard",
+        images: list | None = None,
     ) -> Iterator[str]:
-        """Stream the PRD, yielding text chunks as they arrive."""
-        prompt = self._build_prompt(inputs, format_type)
+        """Stream the PRD, yielding text chunks as they arrive.
+
+        Args:
+            inputs:      Form fields dict (product_name, problem_statement, …)
+            format_type: One of standard | one_page | agile_epic | feature_brief
+            images:      Optional list of {data: <base64>, media_type: <mime>}
+        """
+        content = self._build_content(inputs, format_type, images or [])
 
         with self.client.messages.stream(
             model=self.model,
             max_tokens=4096,
             system=SYSTEM_PROMPT,
-            messages=[{"role": "user", "content": prompt}],
+            messages=[{"role": "user", "content": content}],
         ) as stream:
             for text in stream.text_stream:
                 yield text
 
-    def generate(self, inputs: dict, format_type: str = "standard") -> str:
+    def generate(
+        self,
+        inputs: dict,
+        format_type: str = "standard",
+        images: list | None = None,
+    ) -> str:
         """Generate a complete PRD and return it as a string."""
-        return "".join(self.generate_stream(inputs, format_type))
+        return "".join(self.generate_stream(inputs, format_type, images))
 
 
 # ---------------------------------------------------------------------------
